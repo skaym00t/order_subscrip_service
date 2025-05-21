@@ -1,0 +1,27 @@
+services:
+  service-app:
+    build:
+      context: . # Путь к Dockerfile, если он не в корне
+    image: service-backend # Имя образа
+    container_name: service-site # Имя контейнера
+    ports:
+      - "8000:8000" # Порт, на котором будет доступно приложение
+    volumes:
+      - ./service:/service # Монтируем локальную папку в контейнер(локал/контейнер)
+    env_file:
+      - .env # Файл с переменными окружения
+
+    command: >  # Команда для запуска приложения
+      sh -c "python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - postgres # Зависимость от сервиса базы данных
+
+  postgres: # Сервис базы данных
+    image: postgres:17.4-bookworm
+    container_name: psgr-service # Имя контейнера
+    environment: # Переменные окружения для настройки базы данных
+      - POSTGRES_USER=${DB_USER} # Имя пользователя базы данных
+      - POSTGRES_PASSWORD=${DB_PASSWORD} # Пароль пользователя базы данных
+      - POSTGRES_DB=${DB_NAME} # Имя базы данных
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
