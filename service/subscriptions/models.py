@@ -52,6 +52,8 @@ class UserSubscription(models.Model):
     def save(self, *args, **kwargs):
         if not self.pk:
             self.end_date = self.start_date + timezone.timedelta(days=self.subscription_period)
+        else:
+            self.end_date = timezone.now() + timezone.timedelta(days=self.subscription_period)
         super().save(*args, **kwargs)
 
     class Meta:
