@@ -126,3 +126,15 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGGING = { # Настройки логирования
+    'version': 1, # Версия конфигурации
+    'handlers': { # Обработчики логов
+        'console': {'class': 'logging.StreamHandler'},
+    }, # Обработчик для вывода в консоль
+    'loggers': { # Логгеры
+        'django.db.backends': { # Логгер для вывода SQL-запросов
+            'handlers': ['console'], # Вывод в консоль SQL-запросов
+            # которые выполняются в базе данных при выполнении запросов получения данных(к примеру вьюха)
+            'level': 'DEBUG',} # Отладка SQL-запросов
+    }} # Настройки логирования
