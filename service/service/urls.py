@@ -18,13 +18,18 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
+from products.views import OrderViewSet, NewOrdersViewSet, OrdersInWorkViewSet
 from subscriptions.views import TariffViewSet, UserSubscriptionViewSet
 
 router = routers.DefaultRouter()
 router.register(r'subscriptions', UserSubscriptionViewSet, basename='usersubscription')
 router.register(r'tariffs', TariffViewSet)
+router.register(r'orders', OrderViewSet, basename='order')
+router.register(r'new-orders', NewOrdersViewSet, basename='new-order')
+router.register(r'orders-in-work', OrdersInWorkViewSet, basename='order-in-work')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('general/', include(router.urls))
+    path('general/auth/', include('rest_framework.urls')),
+    path('general/', include(router.urls)),
 ]
