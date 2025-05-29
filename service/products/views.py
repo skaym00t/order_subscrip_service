@@ -1,12 +1,14 @@
-
-
+from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Order
 from .serializers import OrderSerializer
+import requests
+import logging
 
+logger = logging.getLogger(__name__)
 
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
@@ -16,12 +18,21 @@ class OrderViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_staff:
             return Order.objects.all().select_related('customer', 'executor')
-
-        # Для обычных пользователей - только их заказы
         return Order.objects.filter(customer=user).select_related('customer', 'executor')
 
     def perform_create(self, serializer):
-        serializer.save(customer=self.request.user)
+        order = serializer.save()
+        logger.info(f"Создан заказ {order.id} для пользователя {self.request.user.id}")
+        try:
+            response = requests.post(
+                f"{settings.DJANGO_URL}/notify-order/", # http://telegram-bot:8001/notify-order/
+                json={"user_id": self.request.user.id, "order_id": order.id},
+                timeout=5
+            )
+            response.raise_for_status()
+            logger.info(f"Уведомление отправлено для заказа {order.id}")
+        except requests.RequestException as e:
+            logger.error(f"Ошибка отправки уведомления для заказа {order.id}: {e}")
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):

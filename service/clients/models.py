@@ -12,6 +12,7 @@ class CustomUser(AbstractUser):
         unique=True,
         verbose_name='Номер телефона'
     )
+    telegram_id = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):
         return self.username

@@ -164,3 +164,5 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': False, # Не использовать черный список после ротации токенов
     'AUTH_HEADER_TYPES': ('Bearer',), # Тип заголовка для токенов
 }
+
+DJANGO_URL = "http://telegram-bot:8001"

@@ -7,7 +7,7 @@ from .models import CustomUser, Executor
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
     # Поля, отображаемые в списке пользователей
-    list_display = ('username', 'email', 'phone', 'first_name', 'last_name', 'is_staff', 'is_active')
+    list_display = ('username', 'email', 'phone', 'telegram_id', 'first_name', 'last_name', 'is_staff', 'is_active')
     # Поля, по которым можно фильтровать
     list_filter = ('is_staff', 'is_active', 'groups')
     # Поля, по которым можно искать

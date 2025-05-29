@@ -10,11 +10,42 @@ services:
       - ./service:/service # Монтируем локальную папку в контейнер(локал/контейнер)
     env_file:
       - .env # Файл с переменными окружения
-
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
     command: >  # Команда для запуска приложения
       sh -c "python manage.py runserver 0.0.0.0:8000"
     depends_on:
-      - postgres # Зависимость от сервиса базы данных
+      postgres:
+        condition: service_healthy # Зависимость от сервиса базы данных
+    networks:
+      - service-network
+    restart: unless-stopped
+
+  telegram-bot:
+    build:
+      context: ./telegram_bot
+      dockerfile: Dockerfile
+    image: telegram-bot-service
+    container_name: telegram-bot
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./telegram_bot:/app
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - DJANGO_URL=http://service-site:8000
+    command: uvicorn app:app --host 0.0.0.0 --port 8001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-app:
+        condition: service_started
+    networks:
+      - service-network
+    restart: unless-stopped
 
   postgres: # Сервис базы данных
     image: postgres:17.4-bookworm
@@ -25,3 +56,20 @@ services:
       - POSTGRES_DB=${DB_NAME} # Имя базы данных
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - service-network
+    restart: unless-stopped
+
+networks:
+  service-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
