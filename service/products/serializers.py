@@ -1,10 +1,6 @@
 from rest_framework import serializers
-from .models import Order, Executor
+from .models import Order
 
-class ExecutorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Executor
-        fields = ['id', 'user', 'specialty', 'rating']
 
 class OrderSerializer(serializers.ModelSerializer):
     customer = serializers.HiddenField(default=serializers.CurrentUserDefault())

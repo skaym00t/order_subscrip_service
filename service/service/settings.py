@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -38,8 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
     'subscriptions',
-    'products'
+    'products',
+    'clients'
 ]
 
 MIDDLEWARE = [
@@ -50,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'products.middleware.subscription_middleware.SubscriptionMiddleware',
 ]
 
 ROOT_URLCONF = 'service.urls'
@@ -139,3 +143,24 @@ LOGGING = { # Настройки логирования
             # которые выполняются в базе данных при выполнении запросов получения данных(к примеру вьюха)
             'level': 'DEBUG',} # Отладка SQL-запросов
     }} # Настройки логирования
+
+AUTH_USER_MODEL = 'clients.CustomUser'
+
+# Настройка аутентификации
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication', # Использование JWT для аутентификации
+        'rest_framework.authentication.SessionAuthentication', # Сессии для аутентификации
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated', # Требовать аутентификацию для всех запросов по умолчанию
+    ],
+}
+# Настройка JWT
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Время жизни access-токена
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # Время жизни refresh-токена
+    'ROTATE_REFRESH_TOKENS': False, # Не использовать ротацию refresh-токенов
+    'BLACKLIST_AFTER_ROTATION': False, # Не использовать черный список после ротации токенов
+    'AUTH_HEADER_TYPES': ('Bearer',), # Тип заголовка для токенов
+}

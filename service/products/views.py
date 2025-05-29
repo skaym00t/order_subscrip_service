@@ -1,11 +1,10 @@
-from django.db import models
-from django.shortcuts import render
+
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Order, Executor
+from .models import Order
 from .serializers import OrderSerializer
 
 
@@ -57,7 +56,7 @@ class NewOrdersViewSet(viewsets.ReadOnlyModelViewSet):
             customer=self.request.user
         ).select_related('customer')
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post']) # detail=True означает, что действие применяется к конкретному объекту
     def take(self, request, pk=None):
         """Взять заказ в работу"""
         if not hasattr(request.user, 'executor_profile'):
@@ -66,7 +65,14 @@ class NewOrdersViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        order = self.get_object()
+        order = self.get_object() # Получаем заказ по pk (get_object() уже проверяет, что заказ существует)
+
+        if order.executor is not None:
+            return Response(
+                {'error': 'Заказ уже взят в работу'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
             order.take_order(request.user.executor_profile)
             return Response({'status': 'Заказ взят в работу'})
@@ -93,12 +99,19 @@ class OrdersInWorkViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['post'])
     def complete(self, request, pk=None):
         """Эндпоинт для завершения заказа"""
-        if not hasattr(request.user, 'executor_profile'):
+        if not hasattr(request.user, 'executor_profile'): # Проверяем, что пользователь - исполнитель
             return Response(
                 {'error': 'Только исполнители могут закрывать заказы'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        order = self.get_object()
+
+        order = self.get_object() # Получаем заказ по pk (get_object() уже проверяет, что заказ существует)
+
+        if order.executor != request.user: # Проверяем, что заказ взят текущим исполнителем
+            return Response(
+                {'error': 'Вы не можете завершить чужой заказ'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         try:
             order.complete_order()
             return Response({'status': 'Заказ завершен'})

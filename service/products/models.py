@@ -1,22 +1,8 @@
 
-
 from django.core.validators import MinValueValidator
 from django.db import models
 
 from django.conf import settings
-
-
-class Executor(models.Model):
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='executor_profile'
-    )
-    specialty = models.CharField(max_length=100)
-    rating = models.FloatField(default=0.0)
-
-    def __str__(self):
-        return f"{self.user.username} ({self.specialty})"
 
 
 class Order(models.Model):

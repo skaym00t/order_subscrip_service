@@ -18,8 +18,10 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 
+from clients.views import CustomUserViewSet
 from products.views import OrderViewSet, NewOrdersViewSet, OrdersInWorkViewSet
 from subscriptions.views import TariffViewSet, UserSubscriptionViewSet
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 router = routers.DefaultRouter()
 router.register(r'subscriptions', UserSubscriptionViewSet, basename='usersubscription')
@@ -27,9 +29,12 @@ router.register(r'tariffs', TariffViewSet)
 router.register(r'orders', OrderViewSet, basename='order')
 router.register(r'new-orders', NewOrdersViewSet, basename='new-order')
 router.register(r'orders-in-work', OrdersInWorkViewSet, basename='order-in-work')
+router.register(r'users', CustomUserViewSet, basename='user')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('general/auth/', include('rest_framework.urls')),
+    path('general/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'), # для получения пары токенов (access и refresh) по username и password.
+    path('general/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'), # для обновления access токена по refresh токену.
     path('general/', include(router.urls)),
 ]
