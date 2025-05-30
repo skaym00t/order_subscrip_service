@@ -12,7 +12,7 @@ docker-compose stop
 ```
 Создание и применение миграций:
 ```bash
-docker-compose run --rm service-app sh -c "python manage.py makemigrations && python manage.py migrate"
+docker-compose run --rm service-app sh -c "python manage.py migrate"
 ```
 Создание суперпользователя:
 ```bash
