@@ -28,7 +28,7 @@ services:
     image: telegram-bot-service
     container_name: telegram-bot
     ports:
-      - "8001:8001"
+        - "9600:9600"
     volumes:
       - ./telegram_bot:/app
     env_file:
@@ -37,7 +37,7 @@ services:
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - DJANGO_URL=http://service-site:8000
-    command: uvicorn app:app --host 0.0.0.0 --port 8001
+    command: uvicorn app:app --host 0.0.0.0 --port 9600
     depends_on:
       postgres:
         condition: service_healthy

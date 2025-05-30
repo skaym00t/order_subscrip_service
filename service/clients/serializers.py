@@ -10,8 +10,6 @@ class ExecutorSerializer(serializers.ModelSerializer):
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    is_executor = serializers.BooleanField(default=False, write_only=True) # поле для указания,
-    # является ли пользователь исполнителем
     specialty = serializers.CharField(max_length=100, required=False, allow_blank=True, write_only=True) # опциональное
     # поле для исполнителей (specialty - это специальность исполнителя, например, "Веб-разработчик")
 
@@ -23,8 +21,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        is_executor = validated_data.pop('is_executor', False) # Извлекаем значение поля is_executor
+        is_executor = validated_data.get('is_executor', False) # Извлекаем значение поля is_executor
         specialty = validated_data.pop('specialty', '') # Извлекаем значение поля specialty (если оно есть)
+        if is_executor and not specialty:
+            raise serializers.ValidationError("Для исполнителя необходимо указать специальность.")
         user = CustomUser.objects.create_user(**validated_data)
 
         if is_executor and specialty: # Если пользователь является исполнителем и указана специальность

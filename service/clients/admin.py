@@ -7,7 +7,7 @@ from .models import CustomUser, Executor
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
     # Поля, отображаемые в списке пользователей
-    list_display = ('username', 'email', 'phone', 'telegram_id', 'first_name', 'last_name', 'is_staff', 'is_active')
+    list_display = ('username', 'email', 'phone', 'telegram_id', 'first_name', 'last_name', 'is_staff', 'is_executor', 'is_active')
     # Поля, по которым можно фильтровать
     list_filter = ('is_staff', 'is_active', 'groups')
     # Поля, по которым можно искать
@@ -18,7 +18,7 @@ class CustomUserAdmin(admin.ModelAdmin):
     # Поля для формы редактирования/создания
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Персональная информация', {'fields': ('first_name', 'last_name', 'email', 'phone')}),
+        ('Персональная информация', {'fields': ('first_name', 'last_name', 'email', 'phone', 'telegram_id', 'is_executor')}),
         ('Разрешения', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Важные даты', {'fields': ('last_login', 'date_joined')}),
     )

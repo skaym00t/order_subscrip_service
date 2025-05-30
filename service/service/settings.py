@@ -165,4 +165,4 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',), # Тип заголовка для токенов
 }
 
-DJANGO_URL = "http://telegram-bot:8001"
+DJANGO_URL = "http://telegram-bot:9600"  # URL Django приложения для взаимодействия с Telegram ботом

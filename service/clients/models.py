@@ -13,6 +13,7 @@ class CustomUser(AbstractUser):
         verbose_name='Номер телефона'
     )
     telegram_id = models.CharField(max_length=50, null=True, blank=True)
+    is_executor = models.BooleanField(default=False, verbose_name='Я исполнитель')
 
     def __str__(self):
         return self.username

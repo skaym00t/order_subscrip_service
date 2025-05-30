@@ -7,6 +7,7 @@ from .models import Order
 from .serializers import OrderSerializer
 import requests
 import logging
+from .notification import NotificationOrders
 
 logger = logging.getLogger(__name__)
 
@@ -23,16 +24,10 @@ class OrderViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         order = serializer.save()
         logger.info(f"Создан заказ {order.id} для пользователя {self.request.user.id}")
-        try:
-            response = requests.post(
-                f"{settings.DJANGO_URL}/notify-order/", # http://telegram-bot:8001/notify-order/
-                json={"user_id": self.request.user.id, "order_id": order.id},
-                timeout=5
-            )
-            response.raise_for_status()
-            logger.info(f"Уведомление отправлено для заказа {order.id}")
-        except requests.RequestException as e:
-            logger.error(f"Ошибка отправки уведомления для заказа {order.id}: {e}")
+        message_customer = NotificationOrders('notify-create', order, self.request.user)  # Создаем объект уведомления
+        message_exec = NotificationOrders('notify-new-order', order)  # Уведомление исполнителям
+        message_customer()  # Отправляем уведомление через Telegram API
+        message_exec()  # Отправляем уведомление исполнителям
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
@@ -43,13 +38,16 @@ class OrderViewSet(viewsets.ModelViewSet):
                 {'error': 'Вы не можете отменить чужой заказ'},
                 status=status.HTTP_403_FORBIDDEN
             )
-
         try:
             order.status = 'canceled'
             order.save()
-            return Response({'status': 'Заказ отменен'})
+
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            message = NotificationOrders('notify-cancel-order', order, request.user)
+            message()  # Отправляем уведомление заказчику
+            return Response({'status': 'Заказ отменен'})
 
 
 class NewOrdersViewSet(viewsets.ReadOnlyModelViewSet):
@@ -85,11 +83,18 @@ class NewOrdersViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
         try:
-            order.take_order(request.user.executor_profile)
-            return Response({'status': 'Заказ взят в работу'})
+            order.take_order(request.user.executor_profile) # Вызываем метод take_order
+            logger.info(f"Заказ {order.id} взят в работу исполнителем {request.user.id}")
+
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+        else:
+            message_exec = NotificationOrders('notify-take-exec', order, request.user) # Создаем объект уведомления
+            message_cust = NotificationOrders('notify-take-cust', order, order.customer)  # Уведомление заказчику
+            message_exec()  # Отправляем уведомление через Telegram API
+            message_cust()  # Отправляем уведомление заказчику
+            return Response({'status': 'Заказ взят в работу'})
 
 
 class OrdersInWorkViewSet(viewsets.ReadOnlyModelViewSet):
@@ -125,6 +130,9 @@ class OrdersInWorkViewSet(viewsets.ReadOnlyModelViewSet):
             )
         try:
             order.complete_order()
-            return Response({'status': 'Заказ завершен'})
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            message = NotificationOrders('notify-complete-order', order, request.user)
+            message()  # Отправляем уведомление заказчику
+            return Response({'status': 'Заказ завершен'})
