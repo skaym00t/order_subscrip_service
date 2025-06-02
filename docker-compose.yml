@@ -1,22 +1,23 @@
 services:
   service-app:
     build:
-      context: . # Путь к Dockerfile, если он не в корне
-    image: service-backend # Имя образа
-    container_name: service-site # Имя контейнера
+      context: .
+    image: service-backend
+    container_name: service-site
     ports:
-      - "8000:8000" # Порт, на котором будет доступно приложение
+      - "8000:8000"
     volumes:
-      - ./service:/service # Монтируем локальную папку в контейнер(локал/контейнер)
+      - ./service:/service
     env_file:
-      - .env # Файл с переменными окружения
+      - .env
     environment:
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
-    command: >  # Команда для запуска приложения
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
     depends_on:
       postgres:
-        condition: service_healthy # Зависимость от сервиса базы данных
+        condition: service_healthy
     networks:
       - service-network
     restart: unless-stopped
@@ -24,11 +25,8 @@ services:
   telegram-bot:
     build:
       context: ./telegram_bot
-      dockerfile: Dockerfile
     image: telegram-bot-service
     container_name: telegram-bot
-    ports:
-        - "9600:9600"
     volumes:
       - ./telegram_bot:/app
     env_file:
@@ -36,8 +34,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - DJANGO_URL=http://service-site:8000
-    command: uvicorn app:app --host 0.0.0.0 --port 9600
+    command: python pytelegram.py
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,13 +44,13 @@ services:
       - service-network
     restart: unless-stopped
 
-  postgres: # Сервис базы данных
+  postgres:
     image: postgres:17.4-bookworm
-    container_name: psgr-service # Имя контейнера
-    environment: # Переменные окружения для настройки базы данных
-      - POSTGRES_USER=${DB_USER} # Имя пользователя базы данных
-      - POSTGRES_PASSWORD=${DB_PASSWORD} # Пароль пользователя базы данных
-      - POSTGRES_DB=${DB_NAME} # Имя базы данных
+    container_name: psgr-service
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
     ports:

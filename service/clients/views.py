@@ -7,15 +7,17 @@ from .models import CustomUser
 from .serializers import CustomUserSerializer
 
 
-class CustomUserViewSet(viewsets.GenericViewSet): # Используем GenericViewSet для создания пользовательского API
-    queryset = CustomUser.objects.all()
+class CustomUserViewSet(viewsets.GenericViewSet):
+    """ViewSet для регистрации новых пользователей."""
+    queryset = CustomUser.objects.none()
     serializer_class = CustomUserSerializer
 
-    @action(detail=False, methods=['post'], permission_classes=[]) # permission_classes=[] не требует аутентификации
-    def register(self, request): # Создаем пользовательский метод для регистрации пользователей
-        serializer = self.get_serializer(data=request.data) # Получаем сериализатор из класса
-        serializer.is_valid(raise_exception=True) # Проверяем валидность данных, если не валидны, то будет выброшено исключение
-        user = serializer.save() # (save вызывает метод create из сериализатора)
+    @action(detail=False, methods=['post'], permission_classes=[])
+    def register(self, request):
+        """Регистрация нового пользователя."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
         return Response({
             'username': user.username,
             'email': user.email,

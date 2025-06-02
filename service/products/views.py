@@ -1,17 +1,24 @@
-from django.conf import settings
+import telebot
+from os import environ
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from clients.models import CustomUser
 from .models import Order
 from .serializers import OrderSerializer
-import requests
+
 import logging
-from .notification import NotificationOrders
+
 
 logger = logging.getLogger(__name__)
 
+bot = telebot.TeleBot(environ.get("TELEGRAM_BOT_TOKEN"))
+
 class OrderViewSet(viewsets.ModelViewSet):
+    """ViewSet для работы с заказами."""
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 
@@ -22,12 +29,22 @@ class OrderViewSet(viewsets.ModelViewSet):
         return Order.objects.filter(customer=user).select_related('customer', 'executor')
 
     def perform_create(self, serializer):
+        """Создание нового заказа."""
         order = serializer.save()
         logger.info(f"Создан заказ {order.id} для пользователя {self.request.user.id}")
-        message_customer = NotificationOrders('notify-create', order, self.request.user)  # Создаем объект уведомления
-        message_exec = NotificationOrders('notify-new-order', order)  # Уведомление исполнителям
-        message_customer()  # Отправляем уведомление через Telegram API
-        message_exec()  # Отправляем уведомление исполнителям
+        if self.request.user.chat_id:
+            bot.send_message(self.request.user.chat_id, f"Создан новый заказ: {order.title}!")
+        exec_list = CustomUser.objects.filter(is_executor=True, chat_id__isnull=False).values_list('chat_id', flat=True)
+        for exec_chat_id in exec_list:
+            bot.send_message(
+                exec_chat_id,
+                f'''Создан новый заказ!\n
+                {order.title}\n
+                Заказчик: {self.request.user.username}\n
+                Телефон: {self.request.user.phone}\n
+                Описание заказа: {order.description}\n
+                Предложенная цена: {order.price}'''
+            )
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
@@ -45,8 +62,8 @@ class OrderViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            message = NotificationOrders('notify-cancel-order', order, request.user)
-            message()  # Отправляем уведомление заказчику
+            if self.request.user.chat_id:
+                bot.send_message(self.request.user.chat_id, f"Заказ {order.title} отменен!")
             return Response({'status': 'Заказ отменен'})
 
 
@@ -65,7 +82,7 @@ class NewOrdersViewSet(viewsets.ReadOnlyModelViewSet):
             customer=self.request.user
         ).select_related('customer')
 
-    @action(detail=True, methods=['post']) # detail=True означает, что действие применяется к конкретному объекту
+    @action(detail=True, methods=['post'])
     def take(self, request, pk=None):
         """Взять заказ в работу"""
         if not hasattr(request.user, 'executor_profile'):
@@ -74,7 +91,7 @@ class NewOrdersViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        order = self.get_object() # Получаем заказ по pk (get_object() уже проверяет, что заказ существует)
+        order = self.get_object()
 
         if order.executor is not None:
             return Response(
@@ -90,10 +107,13 @@ class NewOrdersViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            message_exec = NotificationOrders('notify-take-exec', order, request.user) # Создаем объект уведомления
-            message_cust = NotificationOrders('notify-take-cust', order, order.customer)  # Уведомление заказчику
-            message_exec()  # Отправляем уведомление через Telegram API
-            message_cust()  # Отправляем уведомление заказчику
+            if self.request.user.chat_id:
+                bot.send_message(self.request.user.chat_id, f"Вы взяли в работу заказ: {order.title}. Телефон заказчика {order.customer.phone}!")
+            if order.customer.chat_id:
+                bot.send_message(
+                    order.customer.chat_id,
+                    f"Заказ {order.title} взят в работу исполнителем {self.request.user.username}, телефон исполнителя {self.request.user.phone}!"
+                )
             return Response({'status': 'Заказ взят в работу'})
 
 
@@ -133,6 +153,11 @@ class OrdersInWorkViewSet(viewsets.ReadOnlyModelViewSet):
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            message = NotificationOrders('notify-complete-order', order, request.user)
-            message()  # Отправляем уведомление заказчику
+            if self.request.user.chat_id:
+                bot.send_message(self.request.user.chat_id, f"Вы завершили заказ: {order.title}!")
+            if order.customer.chat_id:
+                bot.send_message(
+                    order.customer.chat_id,
+                    f"Заказ {order.title} выполнен исполнителем {self.request.user.username}, телефон исполнителя {self.request.user.phone}!"
+                )
             return Response({'status': 'Заказ завершен'})

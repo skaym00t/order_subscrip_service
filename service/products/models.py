@@ -6,6 +6,7 @@ from django.conf import settings
 
 
 class Order(models.Model):
+    """Модель заказа."""
     STATUS_CHOICES = (
         ('new', 'Новый'),
         ('pending', 'В обработке'),

@@ -34,7 +34,7 @@ router.register(r'users', CustomUserViewSet, basename='user')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('general/auth/', include('rest_framework.urls')),
-    path('general/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'), # для получения пары токенов (access и refresh) по username и password.
-    path('general/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'), # для обновления access токена по refresh токену.
+    path('general/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('general/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('general/', include(router.urls)),
 ]

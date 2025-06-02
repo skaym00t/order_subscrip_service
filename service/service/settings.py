@@ -132,37 +132,35 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGGING = { # Настройки логирования
-    'version': 1, # Версия конфигурации
-    'handlers': { # Обработчики логов
+# Настройки логирования
+LOGGING = {
+    'version': 1,
+    'handlers': {
         'console': {'class': 'logging.StreamHandler'},
-    }, # Обработчик для вывода в консоль
-    'loggers': { # Логгеры
-        'django.db.backends': { # Логгер для вывода SQL-запросов
-            'handlers': ['console'], # Вывод в консоль SQL-запросов
-            # которые выполняются в базе данных при выполнении запросов получения данных(к примеру вьюха)
-            'level': 'DEBUG',} # Отладка SQL-запросов
-    }} # Настройки логирования
+    },
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG',}
+    }}
 
 AUTH_USER_MODEL = 'clients.CustomUser'
 
 # Настройка аутентификации
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication', # Использование JWT для аутентификации
-        'rest_framework.authentication.SessionAuthentication', # Сессии для аутентификации
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated', # Требовать аутентификацию для всех запросов по умолчанию
+        'rest_framework.permissions.IsAuthenticated',
     ],
 }
 # Настройка JWT
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Время жизни access-токена
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # Время жизни refresh-токена
-    'ROTATE_REFRESH_TOKENS': False, # Не использовать ротацию refresh-токенов
-    'BLACKLIST_AFTER_ROTATION': False, # Не использовать черный список после ротации токенов
-    'AUTH_HEADER_TYPES': ('Bearer',), # Тип заголовка для токенов
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
-
-DJANGO_URL = "http://telegram-bot:9600"  # URL Django приложения для взаимодействия с Telegram ботом

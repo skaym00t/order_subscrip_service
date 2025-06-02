@@ -5,6 +5,7 @@ from products.models import Order
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
+    """Админка для заказов."""
     list_display = (
         'id',
         'customer',

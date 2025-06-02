@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 from django.db import models
 
 class CustomUser(AbstractUser):
+    """Пользовательская модель пользователя, c добавлением номера телефона и chat_id для Telegram."""
     phone = models.CharField(
         max_length=15,
         validators=[RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Номер телефона должен быть в формате: '+999999999'. До 15 цифр.")],
@@ -24,6 +25,7 @@ class CustomUser(AbstractUser):
 
 
 class Executor(models.Model):
+    """Модель профиля исполнителя, связанная с CustomUser."""
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

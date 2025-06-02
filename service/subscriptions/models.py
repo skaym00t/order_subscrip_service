@@ -5,6 +5,7 @@ from django.db import models
 
 # Create your models here.
 class Tariff(models.Model):
+    """Модель тарифов."""
     TARIFF_TYPES = (
         ('basic', 'Базовый'),
         ('standard', 'Стандарт'),
@@ -24,6 +25,7 @@ class Tariff(models.Model):
         verbose_name_plural = 'Тарифы'
 
 class UserSubscription(models.Model):
+    """Модель подписки пользователя."""
     SUBSCRIPTION_PERIOD = (
         (7, 'неделя'),
         (30, '30 дней'),
@@ -50,6 +52,7 @@ class UserSubscription(models.Model):
         return f'{self.user.username} - {self.tariff.title}'
 
     def save(self, *args, **kwargs):
+        """Переопределенный метод save для установки даты окончания подписки."""
         if not self.pk:
             self.end_date = self.start_date + timezone.timedelta(days=self.subscription_period)
         else:

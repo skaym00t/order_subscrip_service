@@ -1,13 +1,14 @@
 from rest_framework import serializers
 from .models import Order
-from clients.models import CustomUser
 
 class OrderSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Order."""
     customer = serializers.HiddenField(default=serializers.CurrentUserDefault())
     customer_username = serializers.CharField(source='customer.username', read_only=True)
     can_cancel = serializers.SerializerMethodField()
 
     def get_can_cancel(self, obj):
+        """Проверка возможности отмены заказа."""
         request = self.context.get('request')
         return request and obj.customer == request.user and obj.status == 'new'
 
@@ -22,6 +23,7 @@ class OrderSerializer(serializers.ModelSerializer):
         ]
 
     def validate_price(self, value):
+        """Проверка, что цена положительная."""
         if value <= 0:
             raise serializers.ValidationError("Цена должна быть положительной")
         return value
