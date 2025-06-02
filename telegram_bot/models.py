@@ -9,6 +9,6 @@ class CustomUser(Base):
     username = Column(String(150), unique=True, nullable=False)
     email = Column(String(254), unique=True, nullable=False)
     phone = Column(String(15), unique=True, nullable=True)
-    telegram_id = Column(String(50), nullable=True)
+    chat_id = Column(String(50), nullable=True)
     is_executor = Column(Boolean, default=False, nullable=False) # Флаг, является ли пользователь исполнителем
     is_active = Column(Boolean, default=True)

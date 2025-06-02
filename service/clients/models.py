@@ -12,7 +12,7 @@ class CustomUser(AbstractUser):
         unique=True,
         verbose_name='Номер телефона'
     )
-    telegram_id = models.CharField(max_length=50, null=True, blank=True)
+    chat_id = models.CharField(max_length=50, null=True, blank=True)
     is_executor = models.BooleanField(default=False, verbose_name='Я исполнитель')
 
     def __str__(self):
